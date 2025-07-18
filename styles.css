@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #00a2ff 0%, #0051d5 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -25,13 +25,28 @@ body {
     width: 90%;
 }
 
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.roblox-logo {
+    color: #00a2ff;
+    filter: drop-shadow(0 2px 4px rgba(0, 162, 255, 0.3));
+    transform: rotate(-15deg);
+}
+
 header h1 {
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin: 0;
+    background: linear-gradient(135deg, #00a2ff, #0051d5);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    font-weight: 700;
 }
 
 header p {
