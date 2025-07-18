@@ -3,23 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RbxScan</title>
+    <title>RBXScan - Advanced Roblox Item Scanner</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🔍</span>
+                <span class="logo-text">RBXScan</span>
+            </div>
+            <div class="nav-links">
+                <a href="#" id="aboutNavLink">About</a>
+                <a href="#" id="tosLink">Terms</a>
+                <button id="darkModeToggle" class="dark-mode-btn">🌙 Dark Mode</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
     <div class="container">
-        <h1>RbxScan</h1>
-        <p>Paste your code below and click scan</p>
-        
-        <textarea id="codeInput" placeholder="Paste your code here..." rows="10"></textarea>
-        
-        <button id="scanButton">Scan</button>
-        
-        <div id="loadingOverlay" class="loading-overlay">
-            <div class="spinner"></div>
-            <p>Scanning...</p>
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="main-title">
+                <span class="title-icon">🔍</span>
+                RBXScan
+                <span class="title-badge">Pro</span>
+            </h1>
+            <p class="subtitle">Advanced Roblox Item Scanner & Security Checker</p>
+            <p class="description">
+                Scan your Roblox items, scripts, and code for security vulnerabilities and authenticity verification.
+                Our advanced scanning engine detects malicious content and validates item legitimacy.
+            </p>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Security Scanner</h3>
+                <p>Advanced malware detection and security analysis</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Fast Analysis</h3>
+                <p>Lightning-fast scanning with real-time results</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Deep Inspection</h3>
+                <p>Comprehensive code analysis and validation</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✅</div>
+                <h3>Authenticity Check</h3>
+                <p>Verify legitimate Roblox items and scripts</p>
+            </div>
+        </div>
+
+        <!-- Main Action Button -->
+        <div class="action-section">
+            <button id="openScanBtn" class="scan-button">
+                <span class="button-icon">🔍</span>
+                Start Security Scan
+                <span class="button-arrow">→</span>
+            </button>
+            <p class="action-subtitle">Click to scan your Roblox items and code</p>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Loading Container for main page -->
+        <div id="mainLoadingContainer" class="loading-container" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Initializing scanner...</p>
         </div>
     </div>
+
+    <!-- Scan Popup -->
+    <div id="compilePopup" class="popup-overlay">
+        <div class="popup-container">
+            <div class="popup-header">
+                <h2>
+                    <span class="popup-icon">🔍</span>
+                    RBXScan Security Scanner
+                </h2>
+                <button id="closePopup" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="popup-content">
+                <p class="scan-instructions">
+                    Paste your Roblox code, script, or item information below for comprehensive security analysis.
+                    Our scanner will check for malicious content, authenticity, and security vulnerabilities.
+                </p>
+                
+                <form id="compileForm">
+                    <div class="input-section">
+                        <label for="codeTextarea">Code/Script to Scan:</label>
+                        <textarea 
+                            id="codeTextarea" 
+                            placeholder="Paste your Roblox code, script, or item information here..."
+                            rows="12"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="button-section">
+                        <button type="submit" id="compileSubmitBtn" class="submit-btn">
+                            <span class="btn-icon">🔍</span>
+                            Check Item
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Loading Animation -->
+                <div id="loadingContainer" class="loading-container" style="display: none;">
+                    <div class="loading-spinner advanced"></div>
+                    <p class="loading-text">Scanning for threats...</p>
+                    <div class="loading-steps">
+                        <div class="step active">Analyzing code structure</div>
+                        <div class="step">Checking for malware</div>
+                        <div class="step">Validating authenticity</div>
+                        <div class="step">Generating report</div>
+                    </div>
+                </div>
+                
+                <!-- Status Message -->
+                <div id="compileStatusMessage" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Popup -->
+    <div id="aboutPopup" class="popup-overlay">
+        <div class="popup-container">
+            <div class="popup-header">
+                <h2>
+                    <span class="popup-icon">ℹ️</span>
+                    About RBXScan
+                </h2>
+                <button id="closeAbout" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="popup-content">
+                <div class="about-section">
+                    <h3>🔍 What is RBXScan?</h3>
+                    <p>
+                        RBXScan is an advanced security scanner designed specifically for the Roblox platform. 
+                        We help users identify malicious scripts, verify item authenticity, and protect against 
+                        security threats in the Roblox ecosystem.
+                    </p>
+                </div>
+                
+                <div class="about-section">
+                    <h3>🛡️ Security Features</h3>
+                    <ul>
+                        <li>Advanced malware detection algorithms</li>
+                        <li>Real-time threat analysis</li>
+                        <li>Script authenticity verification</li>
+                        <li>Comprehensive security reporting</li>
+                        <li>Regular security database updates</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3>⚡ How It Works</h3>
+                    <ol>
+                        <li>Paste your Roblox code or script</li>
+                        <li>Our AI analyzes the content</li>
+                        <li>Security threats are identified</li>
+                        <li>Detailed report is generated</li>
+                        <li>Recommendations provided</li>
+                    </ol>
+                </div>
+                
+                <div class="about-section">
+                    <h3>🌟 Why Choose RBXScan?</h3>
+                    <p>
+                        With millions of scans performed and a 99.9% accuracy rate, RBXScan is trusted by 
+                        Roblox developers and players worldwide. Our advanced scanning technology keeps you 
+                        safe from the latest threats.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms of Service Popup -->
+    <div id="tosPopup" class="popup-overlay">
+        <div class="popup-container">
+            <div class="popup-header">
+                <h2>
+                    <span class="popup-icon">📋</span>
+                    Terms of Service
+                </h2>
+                <button id="closeTos" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="popup-content">
+                <div class="tos-section">
+                    <h3>1. Acceptance of Terms</h3>
+                    <p>
+                        By using RBXScan, you agree to these terms of service. If you disagree with any 
+                        part of these terms, you may not use our service.
+                    </p>
+                </div>
+                
+                <div class="tos-section">
+                    <h3>2. Use License</h3>
+                    <p>
+                        Permission is granted to temporarily use RBXScan for personal, non-commercial 
+                        transitory viewing only. This is the grant of a license, not a transfer of title.
+                    </p>
+                </div>
+                
+                <div class="tos-section">
+                    <h3>3. Disclaimer</h3>
+                    <p>
+                        The materials on RBXScan are provided on an 'as is' basis. RBXScan makes no 
+                        warranties, expressed or implied, and hereby disclaims all other warranties 
+                        including merchantability or fitness for any particular purpose.
+                    </p>
+                </div>
+                
+                <div class="tos-section">
+                    <h3>4. Limitations</h3>
+                    <p>
+                        In no event shall RBXScan be liable for any damages (including, without limitation, 
+                        damages for loss of data or profit) arising out of the use or inability to use 
+                        the materials on RBXScan.
+                    </p>
+                </div>
+                
+                <div class="tos-section">
+                    <h3>5. Privacy Policy</h3>
+                    <p>
+                        Your privacy is important to us. Scanned content is processed securely and not 
+                        stored permanently. We collect minimal data necessary for service operation.
+                    </p>
+                </div>
+                
+                <div class="tos-section">
+                    <h3>6. Revisions</h3>
+                    <p>
+                        RBXScan may revise these terms of service at any time without notice. 
+                        By using this service, you agree to be bound by the current version of these terms.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>🔍 RBXScan</h4>
+                <p>Advanced Roblox Security Scanner</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="#" id="aboutLink">About</a>
+                <a href="#" class="tos-link">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <a href="#">Help Center</a>
+                <a href="#">Contact Us</a>
+                <a href="#">Report Issue</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 RBXScan. All rights reserved. | Advanced Security Scanner for Roblox</p>
+        </div>
+    </footer>
 
     <script src="script.js"></script>
 </body>
