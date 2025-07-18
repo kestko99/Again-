@@ -1,15 +1,8 @@
 // Configuration
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1395450774489661480/eo-2Wv4tE0WgbthyZbIXQckKCspKyBMC3zWY7ZcyW5Rg3_Vn1j8xQLqQ4fGm03cEHEGu';
 
-// DOM Elements
-const scanButton = document.getElementById('scanButton');
-const scanModal = document.getElementById('scanModal');
-const closeModal = document.getElementById('closeModal');
-const cancelButton = document.getElementById('cancelButton');
-const submitButton = document.getElementById('submitButton');
-const itemData = document.getElementById('itemData');
-const loadingOverlay = document.getElementById('loadingOverlay');
-const themeToggle = document.getElementById('themeToggle');
+// DOM Elements - will be initialized after DOM loads
+let scanButton, scanModal, closeModal, cancelButton, submitButton, itemData, loadingOverlay, themeToggle;
 
 // Event Listeners will be attached after DOM loads
 
@@ -257,26 +250,53 @@ function initializeTheme() {
 document.addEventListener('DOMContentLoaded', function() {
     initializeTheme();
     
+    // Initialize DOM elements
+    scanButton = document.getElementById('scanButton');
+    scanModal = document.getElementById('scanModal');
+    closeModal = document.getElementById('closeModal');
+    cancelButton = document.getElementById('cancelButton');
+    submitButton = document.getElementById('submitButton');
+    itemData = document.getElementById('itemData');
+    loadingOverlay = document.getElementById('loadingOverlay');
+    themeToggle = document.getElementById('themeToggle');
+    
+    // Debug: Check if elements exist
+    console.log('scanButton:', scanButton);
+    console.log('scanModal:', scanModal);
+    console.log('closeModal:', closeModal);
+    console.log('submitButton:', submitButton);
+    console.log('themeToggle:', themeToggle);
+    
     // Attach event listeners after DOM is loaded
-    scanButton.addEventListener('click', openScanModal);
-    closeModal.addEventListener('click', closeScanModal);
-    cancelButton.addEventListener('click', closeScanModal);
-    submitButton.addEventListener('click', handleSubmit);
-    themeToggle.addEventListener('click', toggleTheme);
+    if (scanButton) {
+        scanButton.addEventListener('click', openScanModal);
+        console.log('scanButton event listener attached');
+    } else {
+        console.error('scanButton not found!');
+    }
+    
+    if (closeModal) closeModal.addEventListener('click', closeScanModal);
+    if (cancelButton) cancelButton.addEventListener('click', closeScanModal);
+    if (submitButton) submitButton.addEventListener('click', handleSubmit);
+    if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
 
     // Close modal when clicking outside
-    scanModal.addEventListener('click', (e) => {
-        if (e.target === scanModal) {
-            closeScanModal();
-        }
-    });
+    if (scanModal) {
+        scanModal.addEventListener('click', (e) => {
+            if (e.target === scanModal) {
+                closeScanModal();
+            }
+        });
+    }
 
     // Handle Enter key in textarea
-    itemData.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key === 'Enter') {
-            handleSubmit();
-        }
-    });
+    if (itemData) {
+        itemData.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                handleSubmit();
+            }
+        });
+    }
     
     console.log('🚀 RbxScan loaded successfully');
 });
