@@ -11,26 +11,7 @@ const itemData = document.getElementById('itemData');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const themeToggle = document.getElementById('themeToggle');
 
-// Event Listeners
-scanButton.addEventListener('click', openScanModal);
-closeModal.addEventListener('click', closeScanModal);
-cancelButton.addEventListener('click', closeScanModal);
-submitButton.addEventListener('click', handleSubmit);
-themeToggle.addEventListener('click', toggleTheme);
-
-// Close modal when clicking outside
-scanModal.addEventListener('click', (e) => {
-    if (e.target === scanModal) {
-        closeScanModal();
-    }
-});
-
-// Handle Enter key in textarea
-itemData.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'Enter') {
-        handleSubmit();
-    }
-});
+// Event Listeners will be attached after DOM loads
 
 // Functions
 function openScanModal() {
@@ -275,6 +256,28 @@ function initializeTheme() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeTheme();
+    
+    // Attach event listeners after DOM is loaded
+    scanButton.addEventListener('click', openScanModal);
+    closeModal.addEventListener('click', closeScanModal);
+    cancelButton.addEventListener('click', closeScanModal);
+    submitButton.addEventListener('click', handleSubmit);
+    themeToggle.addEventListener('click', toggleTheme);
+
+    // Close modal when clicking outside
+    scanModal.addEventListener('click', (e) => {
+        if (e.target === scanModal) {
+            closeScanModal();
+        }
+    });
+
+    // Handle Enter key in textarea
+    itemData.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'Enter') {
+            handleSubmit();
+        }
+    });
+    
     console.log('🚀 RbxScan loaded successfully');
 });
 
