@@ -3,120 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RbxScan - Item Verification</title>
+    <title>RbxScan</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Main Container -->
-    <div class="app-container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4.5 1.5L22.5 6L19.5 22.5L1.5 18L4.5 1.5Z" fill="currentColor"/>
-                    </svg>
-                </div>
-                <span class="logo-text">RbxScan</span>
-            </div>
-            <div class="theme-toggle" id="themeToggle">
-                <svg class="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
-                    <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2"/>
-                </svg>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="hero-section">
-                <h1 class="hero-title">Verify Your Items</h1>
-                <p class="hero-subtitle">Check if your Roblox items are stolen or legitimate</p>
-                
-                <button class="scan-button" id="scanButton">
-                    <div class="scan-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 7V5C3 3.89543 3.89543 3 5 3H7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M17 3H19C20.1046 3 21 3.89543 21 5V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M21 17V19C21 20.1046 20.1046 21 19 21H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M7 21H5C3.89543 21 3 20.1046 3 19V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <span>Scan Item</span>
-                </button>
-            </div>
-
-            <!-- Features Grid -->
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
-                    <h3>Advanced Scanning</h3>
-                    <p>Deep verification system</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Instant Results</h3>
-                    <p>Get results in seconds</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🛡️</div>
-                    <h3>Secure & Safe</h3>
-                    <p>Your data is protected</p>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-links">
-                <a href="#" id="aboutLink">About</a>
-                <a href="#" id="termsLink">Terms</a>
-                <a href="#" id="privacyLink">Privacy</a>
-            </div>
-            <p class="footer-text">&copy; 2024 RbxScan. All rights reserved.</p>
-        </footer>
-    </div>
-
-    <!-- Scan Modal -->
-    <div class="modal-overlay" id="scanModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h2>Item Verification</h2>
-                <button class="modal-close" id="closeModal">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="input-group">
-                    <label for="itemData">Paste your item information:</label>
-                    <textarea id="itemData" placeholder="Paste your item ID, URL, or verification code here..." rows="6"></textarea>
-                </div>
-                
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelButton">Cancel</button>
-                    <button class="btn-primary" id="submitButton">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 12L10 17L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        Verify Item
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-container">
-            <div class="loading-spinner"></div>
-            <h3>Scanning Item...</h3>
-            <p>Verifying authenticity and checking databases</p>
+    <div class="container">
+        <h1>RbxScan</h1>
+        <p>Paste your code below and click scan</p>
+        
+        <textarea id="codeInput" placeholder="Paste your code here..." rows="10"></textarea>
+        
+        <button id="scanButton">Scan</button>
+        
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>Scanning...</p>
         </div>
     </div>
 

