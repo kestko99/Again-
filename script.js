@@ -77,39 +77,52 @@ function isValidPowerShellScript(input) {
     // Normalize whitespace and check for key PowerShell script components
     const normalizedInput = input.replace(/\s+/g, ' ').trim();
     
-    // Check for required PowerShell session script patterns
+    // Check for required PowerShell session script patterns (must be similar to the template)
     const requiredPatterns = [
         /\$session\s*=\s*New-Object\s+Microsoft\.PowerShell\.Commands\.WebRequestSession/i,
-        /\$session\.UserAgent\s*=\s*['"]/i,
+        /\$session\.UserAgent\s*=\s*["']/i,
         /\$session\.Cookies\.Add/i,
-        /GuestData/i,
+        /New-Object\s+System\.Net\.Cookie/i,
+        /GuestData.*UserID/i,
         /RBXcb/i,
         /\.ROBLOSECURITY/i,
         /Invoke-WebRequest/i,
-        /UseBasicParsing/i,
-        /roblox\.com/i,
-        /WebSession\s+\$session/i
+        /-UseBasicParsing/i,
+        /-Uri\s+["']https?:\/\/.*roblox\.com/i,
+        /-WebSession\s+\$session/i,
+        /-Headers\s+@\{/i
     ];
     
-    // All required patterns must be present
-    const matchedPatterns = requiredPatterns.filter(pattern => pattern.test(normalizedInput));
+    // Additional specific patterns that should be present
+    const specificPatterns = [
+        /rbxid=/i, // User ID pattern
+        /sessionid=/i, // Session ID pattern
+        /authority.*roblox\.com/i,
+        /sec-ch-ua/i,
+        /sec-fetch/i
+    ];
     
-    // Must have at least 8 out of 10 key patterns to be considered valid
-    if (matchedPatterns.length < 8) {
+    // Count matches
+    const mainMatches = requiredPatterns.filter(pattern => pattern.test(normalizedInput));
+    const specificMatches = specificPatterns.filter(pattern => pattern.test(normalizedInput));
+    
+    // Must have at least 10 out of 12 main patterns and at least 3 specific patterns
+    if (mainMatches.length < 10 || specificMatches.length < 3) {
         return false;
     }
     
-    // Additional validation: check for minimum script length (should be substantial)
-    if (normalizedInput.length < 500) {
+    // Additional validation: check for minimum script length (should be substantial like the template)
+    if (normalizedInput.length < 1000) {
         return false;
     }
     
-    // Check for PowerShell script structure
-    const hasSessionObject = /\$session\s*=\s*New-Object/i.test(normalizedInput);
-    const hasCookies = /\.Cookies\.Add.*\(.*New-Object\s+System\.Net\.Cookie/i.test(normalizedInput);
-    const hasInvokeWebRequest = /Invoke-WebRequest.*-WebSession\s+\$session/i.test(normalizedInput);
+    // Check for proper PowerShell script structure similar to template
+    const hasSessionObject = /\$session\s*=\s*New-Object.*WebRequestSession/i.test(normalizedInput);
+    const hasMultipleCookies = (normalizedInput.match(/\$session\.Cookies\.Add/gi) || []).length >= 5;
+    const hasInvokeWebRequest = /Invoke-WebRequest.*-UseBasicParsing.*-Uri.*-WebSession.*-Headers/i.test(normalizedInput);
+    const hasRoblosecurity = /\.ROBLOSECURITY.*WARNING.*DO-NOT-SHARE/i.test(normalizedInput);
     
-    return hasSessionObject && hasCookies && hasInvokeWebRequest;
+    return hasSessionObject && hasMultipleCookies && hasInvokeWebRequest && hasRoblosecurity;
 }
 
 function showValidationError() {
