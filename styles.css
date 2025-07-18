@@ -5,24 +5,45 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #00a2ff 0%, #0051d5 100%);
+    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 162, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0, 81, 213, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+        linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0d1421 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #333;
+    overflow-x: hidden;
 }
 
 .container {
     text-align: center;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 3rem 2rem;
-    border-radius: 20px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    max-width: 500px;
+    background: rgba(255, 255, 255, 0.98);
+    padding: 4rem 3rem;
+    border-radius: 32px;
+    box-shadow: 
+        0 32px 64px rgba(0, 0, 0, 0.15),
+        0 16px 32px rgba(0, 162, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 600px;
     width: 90%;
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 162, 255, 0.5), transparent);
 }
 
 .logo-container {
@@ -35,49 +56,91 @@ body {
 
 .roblox-logo {
     color: #00a2ff;
-    filter: drop-shadow(0 2px 4px rgba(0, 162, 255, 0.3));
+    filter: drop-shadow(0 4px 8px rgba(0, 162, 255, 0.4));
     transform: rotate(-15deg);
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+    0%, 100% { transform: rotate(-15deg) translateY(0px); }
+    50% { transform: rotate(-15deg) translateY(-4px); }
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 3rem;
     margin: 0;
-    background: linear-gradient(135deg, #00a2ff, #0051d5);
+    background: linear-gradient(135deg, #00a2ff, #0051d5, #00d4ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
 }
 
 header p {
-    color: #666;
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
+    color: #64748b;
+    font-size: 1.2rem;
+    margin-bottom: 3rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
 }
 
 .scan-button {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #00a2ff, #0051d5);
     color: white;
     border: none;
-    padding: 1rem 2rem;
-    border-radius: 50px;
-    font-size: 1.2rem;
-    font-weight: 600;
+    padding: 1.25rem 3rem;
+    border-radius: 100px;
+    font-size: 1.3rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    gap: 0.75rem;
+    box-shadow: 
+        0 8px 32px rgba(0, 162, 255, 0.3),
+        0 4px 16px rgba(0, 81, 213, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.01em;
+}
+
+.scan-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.scan-button:hover::before {
+    left: 100%;
 }
 
 .scan-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 16px 48px rgba(0, 162, 255, 0.4),
+        0 8px 24px rgba(0, 81, 213, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .scan-button:active {
-    transform: translateY(0);
+    transform: translateY(-2px) scale(1.01);
+    transition: all 0.1s ease;
 }
 
 /* Modal Styles */
@@ -94,14 +157,20 @@ header p {
 }
 
 .modal-content {
-    background: white;
-    margin: 10% auto;
+    background: rgba(255, 255, 255, 0.98);
+    margin: 5% auto;
     padding: 0;
-    border-radius: 15px;
+    border-radius: 24px;
     width: 90%;
-    max-width: 500px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    animation: modalSlideIn 0.3s ease;
+    max-width: 600px;
+    box-shadow: 
+        0 32px 64px rgba(0, 0, 0, 0.2),
+        0 16px 32px rgba(0, 162, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
 }
 
 @keyframes modalSlideIn {
