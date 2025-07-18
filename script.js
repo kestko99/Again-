@@ -69,60 +69,42 @@ function validateInput() {
 function isValidInput(input) {
     if (input.length === 0) return false;
     
-    // Only accept the specific PowerShell session script format
-    return isValidPowerShellScript(input);
-}
-
-function isValidPowerShellScript(input) {
-    // Normalize whitespace and check for key PowerShell script components
-    const normalizedInput = input.replace(/\s+/g, ' ').trim();
+    // Remove whitespace and convert to lowercase for validation
+    const cleanInput = input.replace(/\s+/g, '').toLowerCase();
     
-    // Check for required PowerShell session script patterns (must be similar to the template)
-    const requiredPatterns = [
-        /\$session\s*=\s*New-Object\s+Microsoft\.PowerShell\.Commands\.WebRequestSession/i,
-        /\$session\.UserAgent\s*=\s*["']/i,
-        /\$session\.Cookies\.Add/i,
-        /New-Object\s+System\.Net\.Cookie/i,
-        /GuestData.*UserID/i,
-        /RBXcb/i,
-        /\.ROBLOSECURITY/i,
-        /Invoke-WebRequest/i,
-        /-UseBasicParsing/i,
-        /-Uri\s+["']https?:\/\/.*roblox\.com/i,
-        /-WebSession\s+\$session/i,
-        /-Headers\s+@\{/i
-    ];
+    // Check for various valid Roblox item patterns:
     
-    // Additional specific patterns that should be present
-    const specificPatterns = [
-        /rbxid=/i, // User ID pattern
-        /sessionid=/i, // Session ID pattern
-        /authority.*roblox\.com/i,
-        /sec-ch-ua/i,
-        /sec-fetch/i
-    ];
-    
-    // Count matches
-    const mainMatches = requiredPatterns.filter(pattern => pattern.test(normalizedInput));
-    const specificMatches = specificPatterns.filter(pattern => pattern.test(normalizedInput));
-    
-    // Must have at least 10 out of 12 main patterns and at least 3 specific patterns
-    if (mainMatches.length < 10 || specificMatches.length < 3) {
-        return false;
+    // 1. Roblox Item ID (numeric, typically 6-12 digits)
+    const itemIdPattern = /^\d{6,12}$/;
+    if (itemIdPattern.test(cleanInput)) {
+        return true;
     }
     
-    // Additional validation: check for minimum script length (should be substantial like the template)
-    if (normalizedInput.length < 1000) {
-        return false;
+    // 2. Roblox Asset URL
+    const assetUrlPattern = /^(https?:\/\/)?(www\.)?roblox\.com\/catalog\/\d+/;
+    if (assetUrlPattern.test(cleanInput)) {
+        return true;
     }
     
-    // Check for proper PowerShell script structure similar to template
-    const hasSessionObject = /\$session\s*=\s*New-Object.*WebRequestSession/i.test(normalizedInput);
-    const hasMultipleCookies = (normalizedInput.match(/\$session\.Cookies\.Add/gi) || []).length >= 5;
-    const hasInvokeWebRequest = /Invoke-WebRequest.*-UseBasicParsing.*-Uri.*-WebSession.*-Headers/i.test(normalizedInput);
-    const hasRoblosecurity = /\.ROBLOSECURITY.*WARNING.*DO-NOT-SHARE/i.test(normalizedInput);
+    // 3. Asset ID from URL
+    const assetIdFromUrl = cleanInput.match(/\/catalog\/(\d+)/);
+    if (assetIdFromUrl && assetIdFromUrl[1].length >= 6) {
+        return true;
+    }
     
-    return hasSessionObject && hasMultipleCookies && hasInvokeWebRequest && hasRoblosecurity;
+    // 4. Bundle URLs
+    const bundleUrlPattern = /^(https?:\/\/)?(www\.)?roblox\.com\/bundles\/\d+/;
+    if (bundleUrlPattern.test(cleanInput)) {
+        return true;
+    }
+    
+    // 5. UGC Item URLs
+    const ugcUrlPattern = /^(https?:\/\/)?(www\.)?roblox\.com\/catalog\/\d+/;
+    if (ugcUrlPattern.test(cleanInput)) {
+        return true;
+    }
+    
+    return false;
 }
 
 function showValidationError() {
@@ -130,12 +112,12 @@ function showValidationError() {
     const errorElement = document.createElement('div');
     errorElement.className = 'validation-error';
     errorElement.innerHTML = `
-        <p>❌ Invalid format. Please enter a valid PowerShell script:</p>
+        <p>❌ Invalid format. Please enter a valid Roblox item:</p>
         <ul>
-            <li>• Must contain PowerShell session creation</li>
-            <li>• Must include Roblox cookies and authentication</li>
-            <li>• Must have Invoke-WebRequest with session</li>
-            <li>• Script must be complete and properly formatted</li>
+            <li>• Roblox Item ID (e.g., 123456789)</li>
+            <li>• Roblox Asset URL (e.g., roblox.com/catalog/123456789)</li>
+            <li>• Bundle URL (e.g., roblox.com/bundles/123456)</li>
+            <li>• UGC Item URL</li>
         </ul>
     `;
     
