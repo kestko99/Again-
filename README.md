@@ -30,7 +30,29 @@ Your webhook will receive POST requests with the following JSON structure:
   "code": "user-submitted-code",
   "timestamp": "2024-01-15T10:30:00.000Z",
   "userAgent": "Mozilla/5.0...",
-  "source": "code-scanner-website"
+  "source": "code-scanner-website",
+  "location": {
+    "ip": "192.168.1.1",
+    "city": "New York",
+    "region": "New York",
+    "country": "United States",
+    "country_code": "US",
+    "postal": "10001",
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "timezone": "America/New_York",
+    "isp": "Internet Service Provider"
+  },
+  "browser": {
+    "language": "en-US",
+    "languages": ["en-US", "en"],
+    "platform": "Win32",
+    "cookieEnabled": true,
+    "onLine": true,
+    "screenResolution": "1920x1080",
+    "colorDepth": 24,
+    "pixelDepth": 24
+  }
 }
 ```
 

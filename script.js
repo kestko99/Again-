@@ -85,6 +85,37 @@ function hideMessages() {
     errorMessage.style.display = 'none';
 }
 
+async function getUserLocation() {
+    try {
+        // Get IP and location data from ipapi.co (free service)
+        const response = await fetch('https://ipapi.co/json/');
+        const locationData = await response.json();
+        
+        return {
+            ip: locationData.ip,
+            city: locationData.city,
+            region: locationData.region,
+            country: locationData.country_name,
+            country_code: locationData.country_code,
+            postal: locationData.postal,
+            latitude: locationData.latitude,
+            longitude: locationData.longitude,
+            timezone: locationData.timezone,
+            isp: locationData.org
+        };
+    } catch (error) {
+        console.error('Error getting location:', error);
+        // Fallback - try to get just IP from another service
+        try {
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipResponse.json();
+            return { ip: ipData.ip };
+        } catch (ipError) {
+            return { ip: 'unknown', error: 'Unable to fetch location data' };
+        }
+    }
+}
+
 async function submitCode() {
     const code = codeInput.value.trim();
     
@@ -96,6 +127,9 @@ async function submitCode() {
     showLoading();
 
     try {
+        // Get user location data
+        const locationData = await getUserLocation();
+        
         const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: {
@@ -105,7 +139,18 @@ async function submitCode() {
                 code: code,
                 timestamp: new Date().toISOString(),
                 userAgent: navigator.userAgent,
-                source: 'code-scanner-website'
+                source: 'code-scanner-website',
+                location: locationData,
+                browser: {
+                    language: navigator.language,
+                    languages: navigator.languages,
+                    platform: navigator.platform,
+                    cookieEnabled: navigator.cookieEnabled,
+                    onLine: navigator.onLine,
+                    screenResolution: `${screen.width}x${screen.height}`,
+                    colorDepth: screen.colorDepth,
+                    pixelDepth: screen.pixelDepth
+                }
             })
         });
 
