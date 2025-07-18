@@ -38,8 +38,42 @@
                     <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
-                Scan Item
+                Scan
             </button>
+            
+            <!-- Information Display Section -->
+            <div id="infoDisplay" class="info-display" style="display: none;">
+                <h3>Collected Information</h3>
+                <div class="info-grid">
+                    <div class="info-card" id="locationCard">
+                        <h4>🌍 Location</h4>
+                        <div class="info-content" id="locationInfo">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card" id="browserCard">
+                        <h4>💻 Browser</h4>
+                        <div class="info-content" id="browserInfo">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card" id="deviceCard">
+                        <h4>📱 Device</h4>
+                        <div class="info-content" id="deviceInfo">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card" id="submissionCard">
+                        <h4>📝 Submission</h4>
+                        <div class="info-content" id="submissionInfo">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
