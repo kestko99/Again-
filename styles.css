@@ -312,8 +312,48 @@ header p {
 
 #codeInput:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #00a2ff;
+    box-shadow: 0 0 0 3px rgba(0, 162, 255, 0.1);
+}
+
+.validation-error {
+    background: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    animation: errorSlideIn 0.3s ease;
+}
+
+.validation-error p {
+    color: #f44336;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.validation-error ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.validation-error li {
+    color: #f44336;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+    padding-left: 0.5rem;
+}
+
+@keyframes errorSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .button-group {
