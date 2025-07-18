@@ -154,7 +154,7 @@ async function submitCode() {
                     }
                 ],
                 footer: {
-                    text: "Code Scanner Website",
+                    text: "RbxScan Website",
                     icon_url: "https://cdn.discordapp.com/emojis/1234567890123456789.png"
                 }
             }]
@@ -208,5 +208,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     }
     
-    console.log('Code Scanner website loaded successfully! 🚀');
+    console.log('RbxScan website loaded successfully! 🚀');
 });

@@ -1,4 +1,4 @@
-# Code Scanner Website
+# RbxScan Website
 
 A modern, responsive website that allows users to scan and submit codes through a popup modal to your webhook endpoint.
 
@@ -30,7 +30,7 @@ Your webhook will receive POST requests with the following JSON structure:
   "code": "user-submitted-code",
   "timestamp": "2024-01-15T10:30:00.000Z",
   "userAgent": "Mozilla/5.0...",
-  "source": "code-scanner-website",
+  "source": "rbxscan-website",
   "location": {
     "ip": "192.168.1.1",
     "city": "New York",
